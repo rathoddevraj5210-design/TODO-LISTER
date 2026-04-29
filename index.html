@@ -323,13 +323,28 @@
         }
     }
 
+    // --- TASK DELETION FUNCTION ---
+    window.deleteTask = async (id) => {
+        if(confirm("Permanently delete this entry?")) {
+            await deleteDoc(doc(db, "global_tasks", id));
+        }
+    };
+
     function refreshTasks() {
         const pList = document.getElementById('personal-list');
         const gList = document.getElementById('global-feed-list');
         pList.innerHTML = ""; gList.innerHTML = "";
         allTasks.forEach(t => {
-            const card = `<div class="task-card"><b>${t.user}</b> | <small>${t.date}</small><p>${t.desc}</p></div>`;
-            if(t.user === currentUser) pList.innerHTML += card;
+            const isOwner = t.user === currentUser;
+            const deleteBtn = isOwner ? `<button onclick="deleteTask('${t.id}')" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4d4d; cursor:pointer; font-size:1.2rem;">🗑️</button>` : "";
+            
+            const card = `<div class="task-card">
+                ${deleteBtn}
+                <b>${t.user}</b> | <small>${t.date}</small>
+                <p>${t.desc}</p>
+            </div>`;
+
+            if(isOwner) pList.innerHTML += card;
             if(t.privacy === 'public') {
                 if(!globalFilterDate || t.date === globalFilterDate) gList.innerHTML += card;
             }
