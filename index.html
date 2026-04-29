@@ -16,19 +16,29 @@
         }
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; overflow: hidden; display: flex; height: 100vh; width: 100vw; }
+        
+        /* METEOR EFFECT */
+        #meteor-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at bottom, #1b2735 0%, #090a0f 100%); }
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1400; display: none; }
 
+        /* AUTH BOX CENTERING */
+        #auth-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        
+        /* CREATE ACCOUNT BUTTON FIX */
+        #auth-switch { display: block; width: 100%; padding: 12px; margin-top: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff; text-align: center; font-weight: bold; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
+        #auth-switch:hover { background: rgba(255, 255, 255, 0.15); border-color: var(--primary-color); }
+
         .header { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border-color); box-sizing: border-box; }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(15px); transition: 0.3s ease; z-index: 1500; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(15px); transition: 0.3s ease; z-index: 1500; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; will-change: left; }
         .sidebar.active { left: 0; }
         
-        .main-content { flex: 1; margin: 80px auto 0; width: 95%; max-width: 900px; overflow-y: auto; height: calc(100vh - 80px); padding-bottom: 100px; display: none; scrollbar-width: none; box-sizing: border-box; }
-        .square-glass { background: var(--glass-bg); backdrop-filter: blur(25px); border: 1px solid var(--accent-ring); border-radius: 20px; padding: 20px; box-sizing: border-box; margin-bottom: 20px; }
+        .main-content { flex: 1; margin: 80px auto 0; width: 95%; max-width: 900px; overflow-y: auto; height: calc(100vh - 80px); padding-bottom: 100px; display: none; scrollbar-width: none; box-sizing: border-box; will-change: opacity; }
+        .square-glass { background: var(--glass-bg); backdrop-filter: blur(25px); border: 1px solid var(--accent-ring); border-radius: 20px; padding: 20px; box-sizing: border-box; margin-bottom: 20px; transform: translateZ(0); }
 
         label { font-size: 0.7rem; font-weight: bold; color: var(--accent-ring); text-transform: uppercase; margin-top: 8px; display: block; }
         input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.6); color: white; box-sizing: border-box; }
         
-        /* CALENDAR SYSTEM */
         .mini-cal-container { margin: 10px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; }
         .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,0.05); }
@@ -50,15 +60,18 @@
 </head>
 <body>
 
+<canvas id="meteor-canvas"></canvas>
 <div class="overlay" id="overlay"></div>
 
 <div id="auth-container">
     <div class="square-glass" style="max-width: 350px; width:90%;">
-        <h2 style="text-align:center;">MEMBER ACCESS</h2>
+        <h2 style="text-align:center; letter-spacing: 2px;">MEMBER ACCESS</h2>
+        <label>Username</label>
         <input type="text" id="auth-user" placeholder="USERNAME" oninput="this.value = this.value.toUpperCase()">
+        <label>Password</label>
         <input type="password" id="auth-pass" placeholder="PASSWORD">
-        <button id="auth-btn" class="btn">LOGIN</button>
-        <p id="auth-switch" style="font-size:0.8rem; text-align:center; cursor:pointer; color:#aaa; margin-top:15px;">Create Account</p>
+        <button id="auth-btn" class="btn" style="margin-top: 10px;">LOGIN</button>
+        <div id="auth-switch">CREATE ACCOUNT</div>
     </div>
 </div>
 
@@ -73,15 +86,20 @@
         <p id="display-rank" style="color:gray; font-size: 0.7rem;">MEMBER</p>
     </div>
     <hr style="border:0; border-top:1px solid var(--border-color); margin:10px 0;">
-    <div class="nav-btn" data-page="add-task-page">➕ CREATE TASK</div>
-    <div class="nav-btn" data-page="my-list-page">📋 MY PRIVATE LIST</div>
-    <div class="nav-btn" data-page="global-feed-page">🌐 GLOBAL FEED</div>
+    <div class="nav-btn" data-page="add-task-page">➕ CREATE TASK</div> <br><br>
+    
+    
+    <div class="nav-btn" data-page="my-list-page">📋 MY PRIVATE LIST</div><br><br>
+    
+    
+    <div class="nav-btn" data-page="global-feed-page">🌐 GLOBAL FEED</div><br><br>
+    
+    
     <div class="nav-btn" data-page="social-hub-page">👥 SOCIAL HUB</div>
     <div onclick="location.reload()" style="margin-top:auto; color:#ff4d4d; cursor:pointer; padding: 12px; font-weight: bold;">LOGOUT</div>
 </div>
 
 <div class="main-content" id="main-content">
-    
     <div id="add-task-page" class="page active">
         <div class="square-glass">
             <h3>New Cloud Entry</h3>
@@ -155,12 +173,38 @@
     let allTasks = [];
     let globalFilterDate = "";
 
+    // --- METEOR ANIMATION ENGINE ---
+    const canvas = document.getElementById('meteor-canvas');
+    const ctx = canvas.getContext('2d');
+    let meteors = [];
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.onresize = resize; resize();
+
+    class Meteor {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * -canvas.height;
+            this.l = Math.random() * 50 + 20;
+            this.s = Math.random() * 8 + 4;
+        }
+        draw() {
+            ctx.beginPath(); ctx.strokeStyle = "rgba(219, 76, 63, 0.5)"; ctx.lineWidth = 2;
+            ctx.moveTo(this.x, this.y); ctx.lineTo(this.x + this.l, this.y + this.l); ctx.stroke();
+        }
+        update() { this.x += this.s; this.y += this.s; if(this.y > canvas.height) this.reset(); }
+    }
+    for(let i=0; i<20; i++) meteors.push(new Meteor());
+    function anim() { ctx.clearRect(0,0,canvas.width,canvas.height); meteors.forEach(m => {m.update(); m.draw();}); requestAnimationFrame(anim); }
+    anim();
+
     // --- AUTH ---
     document.getElementById('auth-btn').onclick = async () => {
         const u = document.getElementById('auth-user').value.toUpperCase().trim();
         const p = document.getElementById('auth-pass').value.trim();
         const snap = await getDocs(query(collection(db, "users"), where("username", "==", u), where("password", "==", p)));
-        if(!snap.empty || u === "DEVRAJ") startApp(u); else alert("Invalid");
+        if(!snap.empty || u === "DEVRAJ") startApp(u); else alert("Invalid Credentials");
     };
 
     function startApp(u) {
@@ -191,16 +235,11 @@
         document.getElementById('global-month-filter').value = now;
     }
 
-    // --- SOCIAL HUB (FIXED REPEATING) ---
     function renderSocialHub() {
         const dir = document.getElementById('directory-list');
         const fList = document.getElementById('friends-list');
-        dir.innerHTML = ""; fList.innerHTML = ""; // Clear lists once
-
-        // Ensure we only process unique users
-        const uniqueUsers = Array.from(new Set(allUsers.map(a => a.username)))
-            .map(username => allUsers.find(a => a.username === username));
-
+        dir.innerHTML = ""; fList.innerHTML = "";
+        const uniqueUsers = Array.from(new Set(allUsers.map(a => a.username))).map(username => allUsers.find(a => a.username === username));
         uniqueUsers.forEach(user => {
             if(user.username === currentUser) return;
             const isFriend = myFriends.includes(user.username);
@@ -213,7 +252,6 @@
     window.addFriend = (name) => setDoc(doc(db, "users", currentUser, "friends", name), { added: true });
     window.removeFriend = (name) => deleteDoc(doc(db, "users", currentUser, "friends", name));
 
-    // --- CALENDARS ---
     function renderCals() {
         renderCal('add-task-month', 'add-days-grid', 'task-date-val', 'date-box');
         renderCal('global-month-filter', 'global-days-grid', 'global-date-filter', 'global-date-box', true);
@@ -249,12 +287,10 @@
         }
     }
 
-    // --- TASK LOGIC ---
     function refreshTasks() {
         const pList = document.getElementById('personal-list');
         const gList = document.getElementById('global-feed-list');
         pList.innerHTML = ""; gList.innerHTML = "";
-
         allTasks.forEach(t => {
             const card = `<div class="task-card"><b>${t.user}</b> | <small>${t.date}</small><p>${t.desc}</p></div>`;
             if(t.user === currentUser) pList.innerHTML += card;
@@ -282,7 +318,7 @@
     window.showPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'global-feed-page') globalFilterDate = ""; // Reset filter on enter
+        if(id === 'global-feed-page') globalFilterDate = "";
     };
 
     document.querySelectorAll('.nav-btn').forEach(b => {
