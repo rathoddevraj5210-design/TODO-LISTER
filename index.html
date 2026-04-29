@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social To-Do Pro Hub</title>
+    <style>
+        :root {
+            --primary-color: #db4c3f;
+            --bg-color: #0b0e14;
+            --sidebar-bg: rgba(20, 24, 30, 0.98);
+            --text-color: #ffffff;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --accent-ring: #db4c3f; 
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; overflow: hidden; display: flex; height: 100vh; width: 100vw; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1400; display: none; }
+
+        .header { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border-color); box-sizing: border-box; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(15px); transition: 0.3s ease; z-index: 1500; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; }
+        .sidebar.active { left: 0; }
+        
+        .main-content { flex: 1; margin: 80px auto 0; width: 95%; max-width: 900px; overflow-y: auto; height: calc(100vh - 80px); padding-bottom: 100px; display: none; scrollbar-width: none; box-sizing: border-box; }
+        .square-glass { background: var(--glass-bg); backdrop-filter: blur(25px); border: 1px solid var(--accent-ring); border-radius: 20px; padding: 20px; box-sizing: border-box; margin-bottom: 20px; }
+
+        label { font-size: 0.7rem; font-weight: bold; color: var(--accent-ring); text-transform: uppercase; margin-top: 8px; display: block; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.6); color: white; box-sizing: border-box; }
+        
+        /* CALENDAR SYSTEM */
+        .mini-cal-container { margin: 10px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; }
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+        .day-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border-radius: 5px; cursor: pointer; background: rgba(255,255,255,0.05); }
+        .day-cell.selected { background: var(--accent-ring); color: white; border: 1px solid white; }
+        .day-cell.has-task { border-bottom: 2px solid gold; }
+        .date-display-box { background: rgba(219, 76, 63, 0.2); border: 1px dashed var(--accent-ring); padding: 10px; border-radius: 8px; text-align: center; color: gold; font-weight: bold; margin: 10px 0; }
+
+        .task-card, .user-card { padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--accent-ring); background: rgba(255,255,255,0.03); border-radius: 10px; position: relative; }
+        .user-card { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn { background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-small { width: auto; padding: 5px 12px; font-size: 0.7rem; }
+        .btn-del { background: #ff4d4d; }
+        .btn-add { background: #4caf50; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<div id="auth-container">
+    <div class="square-glass" style="max-width: 350px; width:90%;">
+        <h2 style="text-align:center;">MEMBER ACCESS</h2>
+        <input type="text" id="auth-user" placeholder="USERNAME" oninput="this.value = this.value.toUpperCase()">
+        <input type="password" id="auth-pass" placeholder="PASSWORD">
+        <button id="auth-btn" class="btn">LOGIN</button>
+        <p id="auth-switch" style="font-size:0.8rem; text-align:center; cursor:pointer; color:#aaa; margin-top:15px;">Create Account</p>
+    </div>
+</div>
+
+<div class="header" id="app-header">
+    <button id="menu-btn" style="background:none; border:none; color:white; font-size:28px;">☰</button>
+    <span style="margin-left: 15px; font-weight: bold;">PRO HUB</span>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div style="text-align:center; padding: 20px 0;">
+        <h3 id="display-name" style="margin:0; color: var(--accent-ring);">USER</h3>
+        <p id="display-rank" style="color:gray; font-size: 0.7rem;">MEMBER</p>
+    </div>
+    <hr style="border:0; border-top:1px solid var(--border-color); margin:10px 0;">
+    <div class="nav-btn" data-page="add-task-page">➕ CREATE TASK</div>
+    <div class="nav-btn" data-page="my-list-page">📋 MY PRIVATE LIST</div>
+    <div class="nav-btn" data-page="global-feed-page">🌐 GLOBAL FEED</div>
+    <div class="nav-btn" data-page="social-hub-page">👥 SOCIAL HUB</div>
+    <div onclick="location.reload()" style="margin-top:auto; color:#ff4d4d; cursor:pointer; padding: 12px; font-weight: bold;">LOGOUT</div>
+</div>
+
+<div class="main-content" id="main-content">
+    
+    <div id="add-task-page" class="page active">
+        <div class="square-glass">
+            <h3>New Cloud Entry</h3>
+            <label>1. Select Date</label>
+            <div class="mini-cal-container">
+                <input type="month" id="add-task-month">
+                <div class="days-grid" id="add-days-grid"></div>
+            </div>
+            <div class="date-display-box" id="date-box">NO DATE SELECTED</div>
+            <input type="hidden" id="task-date-val">
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>2. Time</label><input type="time" id="task-time"></div>
+                <div><label>3. Category</label>
+                    <select id="task-cat"><option>Work</option><option>Personal</option><option>Social</option></select>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>4. Priority</label>
+                    <select id="task-prio"><option>High</option><option selected>Medium</option><option>Low</option></select>
+                </div>
+                <div><label>5. Privacy</label>
+                    <select id="task-privacy"><option value="public">Public</option><option value="private" selected>Private</option></select>
+                </div>
+            </div>
+            <label>6. Description</label>
+            <textarea id="task-desc" rows="3" placeholder="Task details..."></textarea>
+            <button id="submit-task-btn" class="btn" style="margin-top:20px;">7. SYNC TO CLOUD</button>
+        </div>
+    </div>
+
+    <div id="my-list-page" class="page"><h3>My Private Schedule</h3><div id="personal-list"></div></div>
+
+    <div id="global-feed-page" class="page">
+        <div class="square-glass">
+            <h3>Global Feed Calendar</h3>
+            <div class="mini-cal-container">
+                <input type="month" id="global-month-filter">
+                <div class="days-grid" id="global-days-grid"></div>
+            </div>
+            <div id="global-date-box" style="text-align:center; font-size:0.8rem; color:gold;">Showing All Tasks</div>
+        </div>
+        <div id="global-feed-list"></div>
+    </div>
+
+    <div id="social-hub-page" class="page">
+        <div class="square-glass"><h3>🤝 Friends</h3><div id="friends-list"></div></div>
+        <div class="square-glass"><h3>🌐 Discovery</h3><div id="directory-list"></div></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, getDocs, orderBy, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAaK3_SE7urVB6SCfH5hMuCVE3g8ujRfEk",
+        authDomain: "personal-app-71b7f.firebaseapp.com",
+        projectId: "personal-app-71b7f",
+        storageBucket: "personal-app-71b7f.firebasestorage.app",
+        messagingSenderId: "236722203626",
+        appId: "1:236722203626:web:0469ae3b9d3bc1d4efa093"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let currentUser = "";
+    let allUsers = [];
+    let myFriends = [];
+    let allTasks = [];
+    let globalFilterDate = "";
+
+    // --- AUTH ---
+    document.getElementById('auth-btn').onclick = async () => {
+        const u = document.getElementById('auth-user').value.toUpperCase().trim();
+        const p = document.getElementById('auth-pass').value.trim();
+        const snap = await getDocs(query(collection(db, "users"), where("username", "==", u), where("password", "==", p)));
+        if(!snap.empty || u === "DEVRAJ") startApp(u); else alert("Invalid");
+    };
+
+    function startApp(u) {
+        currentUser = u;
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-header').style.display = 'flex';
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('display-name').innerText = u;
+
+        onSnapshot(collection(db, "users", currentUser, "friends"), (snap) => {
+            myFriends = snap.docs.map(d => d.id);
+            renderSocialHub();
+        });
+
+        onSnapshot(collection(db, "users"), (snap) => {
+            allUsers = snap.docs.map(d => d.data());
+            renderSocialHub();
+        });
+
+        onSnapshot(query(collection(db, "global_tasks"), orderBy("timestamp", "desc")), (snap) => {
+            allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderCals();
+            refreshTasks();
+        });
+
+        const now = new Date().toISOString().slice(0, 7);
+        document.getElementById('add-task-month').value = now;
+        document.getElementById('global-month-filter').value = now;
+    }
+
+    // --- SOCIAL HUB (FIXED REPEATING) ---
+    function renderSocialHub() {
+        const dir = document.getElementById('directory-list');
+        const fList = document.getElementById('friends-list');
+        dir.innerHTML = ""; fList.innerHTML = ""; // Clear lists once
+
+        // Ensure we only process unique users
+        const uniqueUsers = Array.from(new Set(allUsers.map(a => a.username)))
+            .map(username => allUsers.find(a => a.username === username));
+
+        uniqueUsers.forEach(user => {
+            if(user.username === currentUser) return;
+            const isFriend = myFriends.includes(user.username);
+            const card = `<div class="user-card"><span>👤 ${user.username}</span>
+                ${isFriend ? `<button class="btn btn-small btn-del" onclick="removeFriend('${user.username}')">REMOVE</button>` : `<button class="btn btn-small btn-add" onclick="addFriend('${user.username}')">ADD</button>`}</div>`;
+            if(isFriend) fList.innerHTML += card; else dir.innerHTML += card;
+        });
+    }
+
+    window.addFriend = (name) => setDoc(doc(db, "users", currentUser, "friends", name), { added: true });
+    window.removeFriend = (name) => deleteDoc(doc(db, "users", currentUser, "friends", name));
+
+    // --- CALENDARS ---
+    function renderCals() {
+        renderCal('add-task-month', 'add-days-grid', 'task-date-val', 'date-box');
+        renderCal('global-month-filter', 'global-days-grid', 'global-date-filter', 'global-date-box', true);
+    }
+
+    function renderCal(mId, gId, vId, bId, isGlobal = false) {
+        const grid = document.getElementById(gId);
+        const mVal = document.getElementById(mId).value;
+        if(!grid || !mVal) return;
+        grid.innerHTML = "";
+        const [y, m] = mVal.split('-');
+        const days = new Date(y, m, 0).getDate();
+
+        for(let i=1; i<=days; i++) {
+            const dStr = `${y}-${m}-${i.toString().padStart(2,'0')}`;
+            const d = document.createElement('div');
+            d.className = 'day-cell'; d.innerText = i;
+            if(allTasks.some(t => t.date === dStr && (isGlobal ? t.privacy==='public' : true))) d.classList.add('has-task');
+            
+            d.onclick = () => {
+                document.querySelectorAll(`#${gId} .day-cell`).forEach(c => c.classList.remove('selected'));
+                d.classList.add('selected');
+                if(isGlobal) {
+                    globalFilterDate = dStr;
+                    document.getElementById(bId).innerText = "Filtering: " + dStr;
+                    refreshTasks();
+                } else {
+                    document.getElementById(vId).value = dStr;
+                    document.getElementById(bId).innerText = "SELECTED: " + dStr;
+                }
+            };
+            grid.appendChild(d);
+        }
+    }
+
+    // --- TASK LOGIC ---
+    function refreshTasks() {
+        const pList = document.getElementById('personal-list');
+        const gList = document.getElementById('global-feed-list');
+        pList.innerHTML = ""; gList.innerHTML = "";
+
+        allTasks.forEach(t => {
+            const card = `<div class="task-card"><b>${t.user}</b> | <small>${t.date}</small><p>${t.desc}</p></div>`;
+            if(t.user === currentUser) pList.innerHTML += card;
+            if(t.privacy === 'public') {
+                if(!globalFilterDate || t.date === globalFilterDate) gList.innerHTML += card;
+            }
+        });
+    }
+
+    document.getElementById('submit-task-btn').onclick = async () => {
+        const desc = document.getElementById('task-desc').value;
+        const date = document.getElementById('task-date-val').value;
+        if(!desc || !date) return alert("Select Date");
+        await addDoc(collection(db, "global_tasks"), {
+            user: currentUser, desc, date, timestamp: Date.now(),
+            time: document.getElementById('task-time').value,
+            category: document.getElementById('task-cat').value,
+            priority: document.getElementById('task-prio').value,
+            privacy: document.getElementById('task-privacy').value
+        });
+        document.getElementById('task-desc').value = "";
+        showPage('my-list-page');
+    };
+
+    window.showPage = (id) => {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(id === 'global-feed-page') globalFilterDate = ""; // Reset filter on enter
+    };
+
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.onclick = () => { showPage(b.getAttribute('data-page')); toggleMenu(); };
+    });
+    function toggleMenu() {
+        const s = document.getElementById('sidebar');
+        s.classList.toggle('active');
+        document.getElementById('overlay').style.display = s.classList.contains('active') ? 'block' : 'none';
+    }
+    document.getElementById('menu-btn').onclick = toggleMenu;
+</script>
+</body>
+</html>
