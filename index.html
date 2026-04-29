@@ -25,9 +25,9 @@
         /* AUTH BOX CENTERING */
         #auth-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 2000; }
         
-        /* CREATE ACCOUNT BUTTON FIX */
-        #auth-switch { display: block; width: 100%; padding: 12px; margin-top: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff; text-align: center; font-weight: bold; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
-        #auth-switch:hover { background: rgba(255, 255, 255, 0.15); border-color: var(--primary-color); }
+        /* AUTH SWITCH BUTTONS */
+        .auth-toggle-btn { display: block; width: 100%; padding: 12px; margin-top: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff; text-align: center; font-weight: bold; cursor: pointer; transition: 0.3s; box-sizing: border-box; }
+        .auth-toggle-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: var(--primary-color); }
 
         .header { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border-color); box-sizing: border-box; }
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--sidebar-bg); backdrop-filter: blur(15px); transition: 0.3s ease; z-index: 1500; padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; will-change: left; }
@@ -65,13 +65,25 @@
 
 <div id="auth-container">
     <div class="square-glass" style="max-width: 350px; width:90%;">
-        <h2 style="text-align:center; letter-spacing: 2px;">MEMBER ACCESS</h2>
-        <label>Username</label>
-        <input type="text" id="auth-user" placeholder="USERNAME" oninput="this.value = this.value.toUpperCase()">
-        <label>Password</label>
-        <input type="password" id="auth-pass" placeholder="PASSWORD">
-        <button id="auth-btn" class="btn" style="margin-top: 10px;">LOGIN</button>
-        <div id="auth-switch">CREATE ACCOUNT</div>
+        <div id="login-box">
+            <h2 style="text-align:center; letter-spacing: 2px;">MEMBER ACCESS</h2>
+            <label>Username</label>
+            <input type="text" id="auth-user" placeholder="USERNAME" oninput="this.value = this.value.toUpperCase()">
+            <label>Password</label>
+            <input type="password" id="auth-pass" placeholder="PASSWORD">
+            <button id="auth-btn" class="btn" style="margin-top: 10px;">LOGIN</button>
+            <div class="auth-toggle-btn" id="go-to-signup">CREATE ACCOUNT</div>
+        </div>
+
+        <div id="signup-box" style="display: none;">
+            <h2 style="text-align:center; letter-spacing: 2px; color: var(--primary-color);">NEW ACCOUNT</h2>
+            <label>Choose Username</label>
+            <input type="text" id="reg-user" placeholder="USERNAME" oninput="this.value = this.value.toUpperCase()">
+            <label>Choose Password</label>
+            <input type="password" id="reg-pass" placeholder="PASSWORD">
+            <button id="reg-btn" class="btn" style="margin-top: 10px; background: #4caf50;">REGISTER</button>
+            <div class="auth-toggle-btn" id="go-to-login">BACK TO LOGIN</div>
+        </div>
     </div>
 </div>
 
@@ -86,16 +98,10 @@
         <p id="display-rank" style="color:gray; font-size: 0.7rem;">MEMBER</p>
     </div>
     <hr style="border:0; border-top:1px solid var(--border-color); margin:10px 0;">
-    <div class="nav-btn" data-page="add-task-page">➕ CREATE TASK</div> <br><br>
-    
-    
-    <div class="nav-btn" data-page="my-list-page">📋 MY PRIVATE LIST</div><br><br>
-    
-    
-    <div class="nav-btn" data-page="global-feed-page">🌐 GLOBAL FEED</div><br><br>
-    
-    
-    <div class="nav-btn" data-page="social-hub-page">👥 SOCIAL HUB</div>
+    <div class="nav-btn" data-page="add-task-page">➕ CREATE TASK</div><br>
+    <div class="nav-btn" data-page="my-list-page">📋 MY PRIVATE LIST</div><br>
+    <div class="nav-btn" data-page="global-feed-page">🌐 GLOBAL FEED</div><br>
+    <div class="nav-btn" data-page="social-hub-page">👥 SOCIAL HUB</div><br>
     <div onclick="location.reload()" style="margin-top:auto; color:#ff4d4d; cursor:pointer; padding: 12px; font-weight: bold;">LOGOUT</div>
 </div>
 
@@ -199,12 +205,42 @@
     function anim() { ctx.clearRect(0,0,canvas.width,canvas.height); meteors.forEach(m => {m.update(); m.draw();}); requestAnimationFrame(anim); }
     anim();
 
-    // --- AUTH ---
+    // --- NEW: AUTH VIEW TOGGLE ---
+    document.getElementById('go-to-signup').onclick = () => {
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('signup-box').style.display = 'block';
+    };
+    document.getElementById('go-to-login').onclick = () => {
+        document.getElementById('signup-box').style.display = 'none';
+        document.getElementById('login-box').style.display = 'block';
+    };
+
+    // --- AUTH LOGIN ---
     document.getElementById('auth-btn').onclick = async () => {
         const u = document.getElementById('auth-user').value.toUpperCase().trim();
         const p = document.getElementById('auth-pass').value.trim();
         const snap = await getDocs(query(collection(db, "users"), where("username", "==", u), where("password", "==", p)));
         if(!snap.empty || u === "DEVRAJ") startApp(u); else alert("Invalid Credentials");
+    };
+
+    // --- NEW: AUTH CREATE ACCOUNT ---
+    document.getElementById('reg-btn').onclick = async () => {
+        const u = document.getElementById('reg-user').value.toUpperCase().trim();
+        const p = document.getElementById('reg-pass').value.trim();
+        
+        if(!u || !p) return alert("Fill all fields");
+        
+        const check = await getDocs(query(collection(db, "users"), where("username", "==", u)));
+        if(!check.empty) return alert("Username already taken");
+
+        await setDoc(doc(db, "users", u), {
+            username: u,
+            password: p,
+            created: Date.now()
+        });
+        
+        alert("Account Created!");
+        startApp(u);
     };
 
     function startApp(u) {
